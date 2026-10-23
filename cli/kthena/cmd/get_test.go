@@ -354,3 +354,14 @@ func TestPrintObjectTemplateInfo(t *testing.T) {
 	require.NoError(t, json.Unmarshal(buf.Bytes(), &got))
 	assert.Equal(t, info, got)
 }
+
+// TestGetTemplateRejectsJSON verifies get template refuses -o json before it
+// reads the template, since the template has no json form.
+func TestGetTemplateRejectsJSON(t *testing.T) {
+	original := outputFormat
+	t.Cleanup(func() { outputFormat = original })
+
+	outputFormat = "json"
+	err := runGetTemplate(nil, []string{"Qwen/Qwen3-32B"})
+	assert.ErrorContains(t, err, "-o json is not supported for get template")
+}

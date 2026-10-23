@@ -186,6 +186,11 @@ func runGetTemplates(cmd *cobra.Command, args []string) error {
 func runGetTemplate(cmd *cobra.Command, args []string) error {
 	templateName := args[0]
 
+	// The template is a Go-templated manifest, so it has no json form.
+	if outputFormat == "json" {
+		return fmt.Errorf("-o json is not supported for get template, use -o yaml to print the template")
+	}
+
 	if !TemplateExists(templateName) {
 		return fmt.Errorf("template '%s' not found", templateName)
 	}
@@ -203,10 +208,6 @@ func runGetTemplate(cmd *cobra.Command, args []string) error {
 	manifestInfo, err := GetTemplateInfo(templateName)
 	if err != nil {
 		return fmt.Errorf("failed to get template info: %v", err)
-	}
-
-	if outputFormat == "json" {
-		return printObject(os.Stdout, outputFormat, manifestInfo)
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
@@ -377,16 +378,6 @@ func runGetModelBoosters(cmd *cobra.Command, args []string) error {
 	var nameFilter string
 	if len(args) > 0 {
 		nameFilter = args[0]
-	}
-
-	if isStructuredOutput() {
-		matched := []workload.ModelBooster{}
-		for _, model := range models.Items {
-			if nameFilter == "" || strings.Contains(strings.ToLower(model.Name), strings.ToLower(nameFilter)) {
-				matched = append(matched, model)
-			}
-		}
-		return printList(os.Stdout, outputFormat, matched)
 	}
 
 	// Count matching models first
